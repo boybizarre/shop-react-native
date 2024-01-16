@@ -37,6 +37,7 @@ const LoginScreen = () => {
       console.log('Successful Login Response: ', res.data.token);
 
       await AsyncStorage.setItem('auth_token', res.data.token);
+      await AsyncStorage.setItem('user_id', res.data.userId);
       navigation.replace('Main');
 
       setEmail('');

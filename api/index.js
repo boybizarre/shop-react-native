@@ -155,6 +155,7 @@ app.post('/login', async (req, res) => {
 
     res.status(200).json({
       token: signInToken,
+      userId: user._id,
     });
   } catch (error) {
     res.status(500).json({
@@ -215,7 +216,10 @@ app.post('/address', async (req, res) => {
   }
 });
 
-app.get('/all-addresses', async (req, res) => {
+// end point to get all addresses
+app.get('/addresses/:userId', async (req, res) => {
+  console.log('hitting endpoint');
+
   try {
     // 1) Getting token and check it it's there
     let token;
@@ -247,6 +251,8 @@ app.get('/all-addresses', async (req, res) => {
 
     // fetch addresses
     const addresses = user.addresses;
+
+    console.log('hit endpoint');
 
     res.status(200).json({
       addresses,

@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 
-import { useMutation } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import { useNavigation } from '@react-navigation/native';
 import { axiosInstance } from '../utils/axios';
 import { Alert } from 'react-native';
@@ -17,9 +17,10 @@ import Input from '../components/Input';
 
 const AddAddressScreen = () => {
   const navigation = useNavigation();
+  const queryClient = useQueryClient();
 
   const initialFormData = {
-    fullName: '',
+    name: '',
     mobileNo: '',
     houseNo: '',
     street: '',
@@ -37,9 +38,10 @@ const AddAddressScreen = () => {
       return await axiosInstance.post('/address', { address });
     },
 
-    onSuccess: (response) => {
+    onSuccess: async (response) => {
       Alert.alert('Success', response.data.message);
       setFormData(initialFormData);
+      await queryClient.invalidateQueries('fetched-addresses');
       setTimeout(() => {
         navigation.goBack();
       }, 1000);
@@ -61,8 +63,8 @@ const AddAddressScreen = () => {
 
   function isFormValid() {
     return formData &&
-      formData.fullName &&
-      formData.fullName.trim() !== '' &&
+      formData.name &&
+      formData.name.trim() !== '' &&
       formData.mobileNo &&
       formData.mobileNo.trim() !== '' &&
       formData.houseNo &&
@@ -86,11 +88,11 @@ const AddAddressScreen = () => {
         <Input
           label='Full Name ( First and last name )'
           placeholder='Enter your name'
-          value={formData['fullName']}
+          value={formData['name']}
           onChange={(text) =>
             setFormData({
               ...formData,
-              fullName: text,
+              name: text,
             })
           }
         />

@@ -18,6 +18,7 @@ import { useQuery } from 'react-query';
 import { SliderBox } from 'react-native-image-slider-box';
 import { useNavigation } from '@react-navigation/native';
 import { axiosInstance } from '../utils/axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { categories } from '../data/productData';
 import { sliderImages } from '../data/productData';
@@ -35,13 +36,24 @@ import Search from '../components/Search';
 const HomeScreen = () => {
   const navigation = useNavigation();
 
+  const fetchProducts = async () => {
+    return await axiosInstance.get('https://fakestoreapi.com/products');
+  };
+
+  const fetchAddresses = async () => {
+    const userId = await AsyncStorage.getItem('user_id');
+    console.log(userId, 'user_id');
+    return await axiosInstance.get(`/addresses/${userId}`);
+  };
+
   // const { userId, setUserId } = useContext(UserType);
 
   const [open, setOpen] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [addresses, setAddresses] = useState([]);
   const [category, setCategory] = useState('jewelery');
-  const [selectedAddress, setSelectedAdress] = useState('');
+  const [selectedAddress, setSelectedAddress] = useState(null);
+
+  console.log(selectedAddress);
 
   const [items, setItems] = useState([
     { label: "Men's clothing", value: "men's clothing" },
@@ -50,27 +62,32 @@ const HomeScreen = () => {
     { label: "women's clothing", value: "women's clothing" },
   ]);
 
-  // console.log(selectedAddress)
-
   const onGenderOpen = useCallback(() => {
     setCompanyOpen(false);
   }, []);
 
-  const { data } = useQuery(
-    'fetch-products',
-    async () => {
-      return await axiosInstance.get('https://fakestoreapi.com/products');
-    },
-    {
-      onSuccess: (res) => {
-        // console.log(res.data, 'products');
-      },
+  // data fetching ( address and products )
+  const { data: fetchedProducts } = useQuery('fetch-products', fetchProducts);
 
-      onError: (_error) => {
-        toast.error('Something went wrong!');
-      },
-    }
+  const { data: fetchedAddresses } = useQuery(
+    'fetched-addresses',
+    fetchAddresses
   );
+
+  // console.log(fetchedAddresses, 'fetched-Addresses');
+  // console.log(fetchedProducts, 'fetched-products');
+
+  // select address
+  function handleSelectedAddress(address) {
+    if (address === selectedAddress) {
+      setSelectedAddress(null);
+      return;
+    }
+
+    setSelectedAddress(address);
+  }
+
+  console.log(fetchedAddresses?.data, 'addresses home screen');
 
   const cart = useSelector((state) => state.cart.cart);
   console.log(cart, 'cart home screen');
@@ -94,7 +111,15 @@ const HomeScreen = () => {
           <View style={styles.address}>
             <Ionicons name='location-outline' size={24} color='black' />
             <TouchableOpacity onPress={() => setModalVisible(!modalVisible)}>
-              <Text> Deliver to Olakunle - Lagos Nigeria </Text>
+              {selectedAddress ? (
+                <Text>
+                  Deliver to {selectedAddress?.name} - {selectedAddress?.street}
+                </Text>
+              ) : (
+                <Text style={{ fontSize: 13, fontWeight: '500' }}>
+                  Add a Address
+                </Text>
+              )}
             </TouchableOpacity>
             <MaterialIcons name='keyboard-arrow-down' size={24} color='black' />
           </View>
@@ -253,7 +278,7 @@ const HomeScreen = () => {
               flexWrap: 'wrap',
             }}
           >
-            {data?.data
+            {fetchedProducts?.data
               ?.filter((product) => product.category === category)
               .map((product, index) => (
                 <ProductItem product={product} key={index} />
@@ -286,6 +311,55 @@ const HomeScreen = () => {
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator>
             {/* already added addresses */}
+            {fetchedAddresses?.data?.addresses?.map((item, index) => (
+              <Pressable
+                key={index}
+                onPress={() => handleSelectedAddress(item)}
+                style={{
+                  width: 140,
+                  height: 140,
+                  borderColor: '#D0D0D0',
+                  borderWidth: 1,
+                  padding: 10,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: 3,
+                  marginRight: 15,
+                  marginTop: 10,
+                  backgroundColor:
+                    selectedAddress === item ? '#FBCEB1' : 'white',
+                }}
+              >
+                <View
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}
+                >
+                  <Text style={{ fontSize: 13, fontWeight: 'bold' }}>
+                    {item?.name}
+                  </Text>
+                  <Entypo name='location-pin' size={24} color='red' />
+                </View>
+
+                <Text
+                  numberOfLines={1}
+                  style={{ width: 130, fontSize: 13, textAlign: 'center' }}
+                >
+                  {item?.houseNo},{item?.landmark}
+                </Text>
+
+                <Text
+                  numberOfLines={1}
+                  style={{ width: 130, fontSize: 13, textAlign: 'center' }}
+                >
+                  {item?.street}
+                </Text>
+                <Text
+                  numberOfLines={1}
+                  style={{ width: 130, fontSize: 13, textAlign: 'center' }}
+                >
+                  {item.country}
+                </Text>
+              </Pressable>
+            ))}
 
             <Pressable
               onPress={() => {

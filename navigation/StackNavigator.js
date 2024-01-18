@@ -20,6 +20,7 @@ import ProductInfoScreen from '../screens/ProductInfoScreen.js';
 import AddAddressScreen from '../screens/AddressScreen.js';
 import AddressScreen from '../screens/AddAddressScreen.js';
 import ConfirmationScreen from '../screens/ConfirmationScreen.js';
+import OrderScreen from '../screens/OrderScreen.js';
 
 const StackNavigator = () => {
   const Stack = createNativeStackNavigator();
@@ -54,7 +55,7 @@ const StackNavigator = () => {
             tabBarLabelStyle: {
               color: '#008E97',
             },
-            headerShown: false,
+            // headerShown: false,
             tabBarIcon: ({ focused }) =>
               focused ? (
                 <Ionicons name='person' size={24} color='#008E97' />
@@ -121,6 +122,11 @@ const StackNavigator = () => {
         <Stack.Screen
           name='Confirmation'
           component={ConfirmationScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name='Order'
+          component={OrderScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

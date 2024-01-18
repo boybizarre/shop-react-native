@@ -15,9 +15,11 @@ const crypto = require('crypto');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { promisify } = require('util');
+const verifyAuth = require('./utils/verify');
 
 // models
 const User = require('../api/models/user');
+const Order = require('../api/models/order');
 
 // helper functions
 const sendVerificationEmail = require('./utils/email');
@@ -165,40 +167,9 @@ app.post('/login', async (req, res) => {
 });
 
 // endpoint to save a new address
-app.post('/address', async (req, res) => {
+app.post('/address', verifyAuth, async (req, res) => {
   try {
-    // 1) Getting token and check it it's there
-    let token;
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith('Bearer ')
-    ) {
-      token = req.headers.authorization.split(' ')[1];
-    }
-
-    if (!token) {
-      return res.status(401).json({
-        message: 'You are not logged in! Please log in to get access.',
-      });
-    }
-
-    const { address } = req.body;
-
-    console.log(req.body, 'req.body');
-    console.log(address, 'address');
-
-    // 2) verify token
-    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-
-    console.log(decoded, 'decoded-addaddress');
-
-    // find the user by id
-    const user = await User.findById(decoded.id);
-    if (!user) {
-      return res.status(404).json({
-        message: 'The user belonging to this token no longer exists',
-      });
-    }
+    const { user } = req;
 
     // add the address to the user's addresses array
     user.addresses.push(address);
@@ -217,37 +188,11 @@ app.post('/address', async (req, res) => {
 });
 
 // end point to get all addresses
-app.get('/addresses/:userId', async (req, res) => {
+app.get('/all-addresses', verifyAuth, async (req, res) => {
   console.log('hitting endpoint');
 
   try {
-    // 1) Getting token and check it it's there
-    let token;
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith('Bearer ')
-    ) {
-      token = req.headers.authorization.split(' ')[1];
-    }
-
-    if (!token) {
-      return res.status(401).json({
-        message: 'You are not logged in! Please log in to get access.',
-      });
-    }
-
-    // 2) verify token
-    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-
-    console.log(decoded, 'decoded-alladdresses');
-
-    const user = await User.findById(decoded.id);
-
-    if (!user) {
-      return res.status(404).json({
-        message: 'The user belonging to this token no longer exists',
-      });
-    }
+    const { user } = req;
 
     // fetch addresses
     const addresses = user.addresses;
@@ -259,7 +204,82 @@ app.get('/addresses/:userId', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
-      message: 'Error retreiving addresses',
+      message: 'Error fetching addresses',
+    });
+  }
+});
+
+// endpoint to store all orders
+app.post('/create-order', verifyAuth, async (req, res) => {
+  try {
+    const { user } = req;
+    const { cartItems, totalPrice, shippingAddress, paymentMethod } = req.body;
+
+    // create an array of product objects
+    const products = cartItems.map((item) => ({
+      name: item?.title,
+      quantity: item.quantity,
+      price: item?.price,
+      image: item?.image,
+    }));
+
+    // create a new order
+    const order = new Order({
+      user: user._id,
+      products,
+      totalPrice,
+      shippingAddress,
+      paymentMethod,
+    });
+
+    console.log('endpoint got hit');
+
+    await order.save();
+
+    res.status(200).json({
+      message: 'Order created successfully!',
+    });
+  } catch (error) {
+    console.log('Error creating order', error);
+    res.status(500).json({
+      message: 'Error creating order',
+    });
+  }
+});
+
+// end point to get user profile
+app.get('/profile', verifyAuth, async (req, res) => {
+  try {
+    const { user } = req;
+
+    res.status(200).json({ user });
+    
+  } catch (error) {
+    console.log('Error fetching user', error);
+    res.status(500).json({
+      message: 'Error fetching user profile',
+    });
+  }
+});
+
+// end point to fetch all orders for user
+app.get('/all-orders', verifyAuth, async (req, res) => {
+  try {
+    const { user } = req;
+
+    const orders = await Order.find({ user: user._id }).populate('user');
+
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({
+        message: 'No orders found for this user',
+      });
+    }
+
+    res.status(200).json({ orders });
+  } catch (error) {
+    console.log('Error fetching order', error);
+    res.status(500).json({
+      message: 'Error fetching order',
     });
   }
 });

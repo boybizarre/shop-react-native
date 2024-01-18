@@ -18,6 +18,7 @@ import { useQuery } from 'react-query';
 import { SliderBox } from 'react-native-image-slider-box';
 import { useNavigation } from '@react-navigation/native';
 import { axiosInstance } from '../utils/axios';
+import useFetchAddresses from '../hooks/useFetchAddresses';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { categories } from '../data/productData';
@@ -43,7 +44,7 @@ const HomeScreen = () => {
   const fetchAddresses = async () => {
     const userId = await AsyncStorage.getItem('user_id');
     console.log(userId, 'user_id');
-    return await axiosInstance.get(`/addresses/${userId}`);
+    return await axiosInstance.get(`/all-addresses`);
   };
 
   // const { userId, setUserId } = useContext(UserType);
@@ -69,12 +70,9 @@ const HomeScreen = () => {
   // data fetching ( address and products )
   const { data: fetchedProducts } = useQuery('fetch-products', fetchProducts);
 
-  const { data: fetchedAddresses } = useQuery(
-    'fetched-addresses',
-    fetchAddresses
-  );
+  const { data: fetchedAddresses } = useFetchAddresses();
 
-  // console.log(fetchedAddresses, 'fetched-Addresses');
+  console.log(fetchedAddresses, 'fetched-Addresses');
   // console.log(fetchedProducts, 'fetched-products');
 
   // select address

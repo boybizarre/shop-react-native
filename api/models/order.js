@@ -36,7 +36,6 @@ const orderSchema = new mongoose.Schema({
     name: {
       type: String,
       required: true,
-      mobileNo,
     },
     mobileNo: {
       type: String,
@@ -55,6 +54,10 @@ const orderSchema = new mongoose.Schema({
       required: true,
     },
     postalCode: {
+      type: String,
+      required: true,
+    },
+    country: {
       type: String,
       required: true,
     },

@@ -7,10 +7,6 @@ import {
   View,
   Pressable,
 } from 'react-native';
-import { useQuery } from 'react-query';
-import { axiosInstance } from '../utils/axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Alert } from 'react-native';
 
 // icons
 import { MaterialIcons } from '@expo/vector-icons';
@@ -20,25 +16,14 @@ import { Entypo } from '@expo/vector-icons';
 // components
 import Search from '../components/Search';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import useFetchAddresses from '../hooks/useFetchAddresses';
 
 const AddressScreen = () => {
   const navigation = useNavigation();
 
-  const fetchAddresses = async () => {
-    const userId = await AsyncStorage.getItem('user_id');
-    console.log(userId, 'user_id');
-    return await axiosInstance.get(`/addresses/${userId}`);
-  };
+  const { data } = useFetchAddresses();
 
-  const { data } = useQuery('fetched-addresses', fetchAddresses, {
-    onSuccess: (res) => {
-      console.log(res?.data?.addresses);
-    },
-
-    onError: (_error) => {
-      Alert.alert('Error', 'Unable to Fetch Addresses');
-    },
-  });
+  console.log(data, ' addresses-data');
 
   // useFocusEffect(
   //   useCallback(() => {

@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  Pressable,
-  Image,
-} from 'react-native';
+import { Text, View, ScrollView, Pressable, Image } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   incrementQuantity,
@@ -119,7 +112,7 @@ const CartScreen = () => {
                 <Text
                   style={{ fontSize: 20, fontWeight: 'bold', marginTop: 6 }}
                 >
-                  {item?.price}
+                  ₦{item?.price}
                 </Text>
                 <Image
                   style={{ width: 30, height: 30, resizeMode: 'contain' }}
@@ -258,5 +251,3 @@ const CartScreen = () => {
 };
 
 export default CartScreen;
-
-const styles = StyleSheet.create({});
